@@ -144,3 +144,77 @@ void moveLeg1() {
 // Check for incoming data
   if (Bluetooth.available() > 0) {
     dataIn = Bluetooth.read();  // Read the data
+
+
+// Monitor the battery voltage
+    int sensorValue = analogRead(A3);
+    float voltage = sensorValue * (5.00 / 1023.00) * 2.9; // Convert the reading values from 5v to suitable 12V i
+    Serial.println(voltage);
+    // If voltage is below 11V turn on the LED
+    if (voltage < 11) {
+      digitalWrite(ledB, HIGH);
+    }
+    else {
+      digitalWrite(ledB, LOW);
+    }
+
+
+// Get the distance from the ultrasonic sensor
+    if (getDistance() > 40) {
+      att = 0;
+    }
+    if (getDistance() <= 40) {
+      att = 1;
+      dataIn = 99;
+    }
+
+
+// If there is an object in front of the sensor prepare for attack
+  if (att == 1) {
+    prepareAttack();
+    if (aStatus == HIGH) {
+      while (a == 0) {
+        delay(2000);
+        a = 1;
+      }
+      if (getDistance() > 30) {
+        att = 2;
+        a = 0;
+        aStatus = LOW;
+        initialPosHead();
+      }
+      if (getDistance() < 30) {
+        att = 3;
+        a = 0;
+        aStatus = LOW;
+        initialPosHead();
+      }
+    }
+  }
+  // If there is no longer object in front, dismiss the attack
+  if (att == 2) {
+    dismissAttack();
+    if (aStatus == HIGH) {
+      dataIn = 0;
+      att = 0;
+    }
+  }
+  // If there is closer to the sensor attack
+  if (att == 3) {
+    attack();
+    if (attStatus == HIGH) {
+      while (aa == 0) {
+        delay(2000);
+        aa = 1;
+      } attStatus = LOW;
+    }
+    if (aStatus == HIGH) {
+      while (a == 0) {
+        delay(2000);
+        a = 1;
+      }
+      dataIn = 0;
+      att = 0;
+      initialPosHead();
+    }
+  }
